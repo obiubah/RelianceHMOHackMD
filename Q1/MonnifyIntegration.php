@@ -18,7 +18,6 @@ class MonnifyIntegration implements AccountProviderContract
         $this->apiBaseEndPoint = $baseEndPoint;
     }
 
-
     public function getAuthToken()
     {
         if ($this->authTokenExpiryTime > time()) {
