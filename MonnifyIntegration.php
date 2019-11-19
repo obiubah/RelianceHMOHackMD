@@ -1,6 +1,7 @@
 <?php
 
-require('RequestModels/ReserveAccount.php');
+require('Models/RequestModels/ReserveAccount.php');
+require('Contracts/AccountProviderContract.php');
 
 class MonnifyIntegration implements AccountProviderContract
 {
@@ -21,7 +22,7 @@ class MonnifyIntegration implements AccountProviderContract
     public function getAuthToken()
     {
         if ($this->authTokenExpiryTime > time()) {
-            echo "Using existing authToken ---- <br />" . $this->authToken;
+            echo "Using existing authToken ---- <br />";
             return $this->authToken;
         }
 
@@ -73,20 +74,19 @@ class MonnifyIntegration implements AccountProviderContract
     public function deactivateReservedAccount($accountReference)
     {
         echo "--- Deactivating account with reference ::: " . $accountReference . "--- <br>";
-        $deactivateReserveAccountUrl = $this->apiBaseEndPoint . "api/v1/bank-transfer/reserved-accounts/" . $accountReference;
+        $deactivateReserveAccountUrl = $this->apiBaseEndPoint . "/api/v1/bank-transfer/reserved-accounts/" . $accountReference;
 
         $ch = curl_init($deactivateReserveAccountUrl);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER,
-            'Authorization: Bearer ' . $this->getAuthToken()
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization: Bearer ' . $this->getAuthToken())
         );
 
         $jsonDeactivateAccountResponse = curl_exec($ch);
 
         $response = $this->handleMonnifyResponse($jsonDeactivateAccountResponse, $ch);
 
-        print_r("Deactivate Reserved Account Request Was Successful \n" . $response['responseBody'] . "<br>");
+        echo "Deactivate Reserved Account Request Was Successful <br>";
 
         return $response['responseBody']['requestSuccessful'];
     }
@@ -95,7 +95,7 @@ class MonnifyIntegration implements AccountProviderContract
     {
         echo "--- Fetching status of transaction with reference ::: " . $transactionReference . "--- <br>";
 
-        $transactionReferenceUrl = $this->apiBaseEndPoint . "api/v1/merchant/transactions/query?transactionReference=" . $transactionReference;
+        $transactionReferenceUrl = $this->apiBaseEndPoint . "/api/v1/merchant/transactions/query?transactionReference=" . $transactionReference;
 
         $ch = curl_init($transactionReferenceUrl);
 
@@ -103,8 +103,7 @@ class MonnifyIntegration implements AccountProviderContract
 
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER,
-            'Basic ' . $basicAuth
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Basic ' . $basicAuth)
         );
 
         $jsonResponse = curl_exec($ch);
@@ -132,6 +131,8 @@ class MonnifyIntegration implements AccountProviderContract
             throw new Exception($response['error_description']);
         }
 
+        print_r($response);
+
         if (!$response['requestSuccessful']) {
             throw new Exception("Unsuccessful Request! Please take appropriate action");
         }
@@ -152,13 +153,15 @@ class MonnifyIntegration implements AccountProviderContract
     }
 }
 
-$monnifyIntegration = new MonnifyIntegration("MK_TEST_WD7TZCMQV7", "H5EQMQSHSURJNQ7UH2R78YAH6UN54ZP7", 'https://sandbox.monnify.com');
+//$monnifyIntegration = new MonnifyIntegration("MK_TEST_WD7TZCMQV7", "H5EQMQSHSURJNQ7UH2R78YAH6UN54ZP7", 'https://sandbox.monnify.com');
 
 //$monnifyReserveAccount = new ReserveAccountRequest("RandyOrton", "Obinna", "NGN", "2957982769", "slayer@gmail.com");
 
 //$monnifyIntegration->reserveAccount($monnifyReserveAccount);
 
-$monnifyIntegration->deactivateReservedAccount("RandyOrton");
+//$monnifyIntegration->deactivateReservedAccount("RandyOrton");
+
+//$monnifyIntegration->getTransactionStatus("RandyOrton");
 
 //print_r($monnifyIntegration->getAuthToken());
 
